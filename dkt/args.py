@@ -66,6 +66,8 @@ def parse_args(mode="train"):
     parser.add_argument(
         "--scheduler", default="plateau", type=str, help="scheduler type"
     )
+    parser.add_argument('--wandb', default=False, type=bool, help="wandb")
+
 
     args = parser.parse_args()
 
