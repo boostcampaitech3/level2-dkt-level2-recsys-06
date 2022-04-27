@@ -8,7 +8,7 @@ import wandb
 from .criterion import get_criterion
 from .dataloader import get_loaders
 from .metric import get_metric
-from .model import LSTM, LSTMATTN, Bert
+from .model import LSTM, LSTMATTN, Bert, UltraGCN
 from .optimizer import get_optimizer
 from .scheduler import get_scheduler
 
@@ -40,17 +40,18 @@ def run(args, train_data, valid_data):
         ### VALID
         auc, acc = validate(valid_loader, model, args)
 
-        ### TODO: model save or early stopping
-        wandb.log(
-            {
-                "epoch": epoch,
-                "train_loss": train_loss,
-                "train_auc": train_auc,
-                "train_acc": train_acc,
-                "valid_auc": auc,
-                "valid_acc": acc,
-            }
-        )
+        ### TODO: model save or early 
+        if args.wandb:
+            wandb.log(
+                {
+                    "epoch": epoch,
+                    "train_loss": train_loss,
+                    "train_auc": train_auc,
+                    "train_acc": train_acc,
+                    "valid_auc": auc,
+                    "valid_acc": acc,
+                }
+            )
         if auc > best_auc:
             best_auc = auc
             # torch.nn.DataParallel로 감싸진 경우 원래의 model을 가져옵니다.
@@ -197,6 +198,8 @@ def get_model(args):
         model = LSTMATTN(args)
     if args.model == "bert":
         model = Bert(args)
+    if args.model == "UltraGCN":
+        model = UltraGCN(args)
 
     model.to(args.device)
 
