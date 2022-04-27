@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 try:
     from transformers.modeling_bert import BertConfig, BertEncoder, BertModel
