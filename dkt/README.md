@@ -1,1 +1,3 @@
-# pstage_04_dkt
+# XGBoost
+- python train.py --model 'XGBoost'
+- python inference.py --model 'XGBoost'
