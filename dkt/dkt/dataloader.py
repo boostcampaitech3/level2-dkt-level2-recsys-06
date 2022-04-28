@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import torch
 import tqdm
+import datetime
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -208,3 +209,102 @@ def get_loaders(args, train, valid):
         )
 
     return train_loader, valid_loader
+
+
+def feature_engineering():
+
+    data_dir = '/opt/ml/input/data' # 경로는 상황에 맞춰서 수정해주세요!
+    csv_file_path = os.path.join(data_dir, 'train_data.csv') # 데이터는 대회홈페이지에서 받아주세요 :)
+
+    df = pd.read_csv(csv_file_path) 
+    df = feature_engineering(df)
+    
+    #유저별 시퀀스를 고려하기 위해 아래와 같이 정렬
+    df.sort_values(by=['userID','Timestamp'], inplace=True)
+    
+    #유저들의 문제 풀이수, 정답 수, 정답률을 시간순으로 누적해서 계산
+    df['user_correct_answer'] = df.groupby('userID')['answerCode'].transform(lambda x: x.cumsum().shift(1))
+    df['user_total_answer'] = df.groupby('userID')['answerCode'].cumcount()
+    df['user_acc'] = df['user_correct_answer']/df['user_total_answer']
+    
+    # testId와 KnowledgeTag의 전체 정답률은 한번에 계산
+    # 아래 데이터는 제출용 데이터셋에 대해서도 재사용
+    correct_t = df.groupby(['testId'])['answerCode'].agg(['mean', 'sum'])
+    correct_t.columns = ["test_mean", 'test_sum']
+    correct_k = df.groupby(['KnowledgeTag'])['answerCode'].agg(['mean', 'sum'])
+    correct_k.columns = ["tag_mean", 'tag_sum']
+
+    df = pd.merge(df, correct_t, on=['testId'], how="left")
+    df = pd.merge(df, correct_k, on=['KnowledgeTag'], how="left")
+    
+    # df.insert(3, "solveTime", np.NaN)
+    # train_np = df.to_numpy()
+
+    # idx_list = list()
+
+    # for i in range(len(train_np)-1):
+    #     # 현재 문제의 timestamp을 가져온다
+    #     current_date_data, current_time_data = train_np[i][5].strip().split(" ")
+    #     current_year, current_month, current_day = map(int, list(current_date_data.split("-")))
+    #     current_hour, current_minute, current_second = map(int, list(current_time_data.split(":")))
+
+    #     # 다음 문제의 timestamp를 가져온다.
+    #     next_date_data, next_time_data = train_np[i+1][5].strip().split(" ")
+    #     next_year, next_month, next_day = map(int, list(next_date_data.split("-")))
+    #     next_hour, next_minute, next_second = map(int, list(next_time_data.split(":")))
+
+
+    #     # 같은 유저가 다음 문제도 같은 시험지를 풀고 았거나, 
+    #     # 다른 시험 문제지를 같은 날짜에 풀었을 경우
+    #     # 문제 푸는 시간 = 다음 문제가 시작 시간 - 현재 문제가 시작한 시간
+    #     if train_np[i][0]==train_np[i+1][0] and \
+    #         (train_np[i][2]==train_np[i+1][2] or (train_np[i][5]!=train_np[i+1][5] and current_date_data == next_date_data)):         
+    #         train_np[i][3] = datetime.datetime(next_year, next_month, next_day, next_hour, next_minute, next_second) - datetime.datetime(current_year, current_month, current_day, current_hour, current_minute, current_second)
+    #         train_np[i][3] = train_np[i][3].total_seconds() # 초로 변환
+    #         #if train_np[i][3]>150 : train_np[i][3] = 150
+
+    #     else :
+    #         # 마지막으로 푼 문제인 경우는 60으로 통일
+    #         train_np[i][3] = 60.0
+
+    #     df.iloc[i,3] = train_np[i][3]
+
+    #     #if train_np[i][3] == 0  : idx_list.append(i)
+   
+    # train_np[-1][3] = 60.0
+    # df.iloc[-1,3] = train_np[i][3]
+
+    
+    # test_mean_solveTime = df.groupby('testId')['solveTime'].mean()
+    # test_mean_solveTime.columns = ['test_mean_solveTime']
+    # # user_mean_solveTime = df.groupby('userID')['solveTime'].mean()
+    # # user_mean_solveTime.columns = ['user_mean_solveTime']
+    # tag_mean_solveTime = df.groupby('KnowledgeTag')['solveTime'].mean()
+    # tag_mean_solveTime.columns = ['tag_mean_solveTime']
+    # #assessmentItem_mean_solveTime = df.groupby('assessmentItemID')['solveTime'].mean()
+    # #assessmentItem_mean_solveTime.columns = ['assessmentItem_mean_solveTime']
+
+    # df = pd.merge(df, test_mean_solveTime, on=['testId'], how="left")
+    # #df = pd.merge(df, user_mean_solveTime, on=['userID'], how="left")
+    # df = pd.merge(df, tag_mean_solveTime, on=['KnowledgeTag'], how="left")
+    # #df = pd.merge(df, assessmentItem_mean_solveTime, on=['assessmentItemID'], how="left")
+
+    df.insert(1, "testType", np.NaN)
+    df.insert(2, "testID", np.NaN)
+    df.insert(3, "questionID", np.NaN)
+
+    train_np = df.to_numpy()
+
+    for i in range(len(df)):
+        assessmentItemID = train_np[i][4]
+        df.iloc[i,1] = int(assessmentItemID[2])
+        df.iloc[i,2] = int(assessmentItemID[4:7])
+        df.iloc[i,3] = int(assessmentItemID[8:])
+
+    #df = pd.DataFrame(train_np, columns=df.columns)
+
+    
+    # df = df.drop(idx_list, axis=0)
+    # df = df.drop(['solveTime'], axis=1)
+
+    return df
