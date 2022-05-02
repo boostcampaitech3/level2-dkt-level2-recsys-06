@@ -4,77 +4,95 @@ import os
 import numpy as np
 import torch
 import wandb
+import joblib
+import pandas as pd
 
 from .criterion import get_criterion
-from .dataloader import get_loaders
+from .dataloader import get_loaders, feature_engineering
 from .metric import get_metric
 from .model import LSTM, LSTMATTN, Bert
+from sklearn.ensemble import HistGradientBoostingRegressor
 from .optimizer import get_optimizer
 from .scheduler import get_scheduler
 
 
+FEATS = ['KnowledgeTag', 'user_correct_answer', 'user_total_answer', 
+                'user_acc', 'test_mean', 'test_sum', 'tag_mean','tag_sum', 'userID']#,'testType', 'testID', 'questionID']
+
+data_dir = '/opt/ml/input/data'
+
 def run(args, train_data, valid_data):
-    train_loader, valid_loader = get_loaders(args, train_data, valid_data)
+    if args.model == "HistGradientBoosting":
+        model = get_model(args)
 
-    # only when using warmup scheduler
-    args.total_steps = int(math.ceil(len(train_loader.dataset) / args.batch_size)) * (
-        args.n_epochs
-    )
-    args.warmup_steps = args.total_steps // 10
+        # 사용할 Feature 설정
+        train, y_train = train_data
+        model.fit(train[FEATS], y_train)
+        joblib.dump(model, os.path.join(args.output_dir, f"{args.model}.pkl"))
 
-    model = get_model(args)
-    optimizer = get_optimizer(model, args)
-    scheduler = get_scheduler(optimizer, args)
+    else:
+        train_loader, valid_loader = get_loaders(args, train_data, valid_data)
 
-    best_auc = -1
-    early_stopping_counter = 0
-    for epoch in range(args.n_epochs):
-
-        print(f"Start Training: Epoch {epoch + 1}")
-
-        ### TRAIN
-        train_auc, train_acc, train_loss = train(
-            train_loader, model, optimizer, scheduler, args
+        # only when using warmup scheduler
+        args.total_steps = int(math.ceil(len(train_loader.dataset) / args.batch_size)) * (
+            args.n_epochs
         )
+        args.warmup_steps = args.total_steps // 10
 
-        ### VALID
-        auc, acc = validate(valid_loader, model, args)
+        model = get_model(args)
+        optimizer = get_optimizer(model, args)
+        scheduler = get_scheduler(optimizer, args)
 
-        ### TODO: model save or early stopping
-        wandb.log(
-            {
-                "epoch": epoch,
-                "train_loss": train_loss,
-                "train_auc": train_auc,
-                "train_acc": train_acc,
-                "valid_auc": auc,
-                "valid_acc": acc,
-            }
-        )
-        if auc > best_auc:
-            best_auc = auc
-            # torch.nn.DataParallel로 감싸진 경우 원래의 model을 가져옵니다.
-            model_to_save = model.module if hasattr(model, "module") else model
-            save_checkpoint(
-                {
-                    "epoch": epoch + 1,
-                    "state_dict": model_to_save.state_dict(),
-                },
-                args.model_dir,
-                "model.pt",
+        best_auc = -1
+        early_stopping_counter = 0
+        for epoch in range(args.n_epochs):
+
+            print(f"Start Training: Epoch {epoch + 1}")
+
+            ### TRAIN
+            train_auc, train_acc, train_loss = train(
+                train_loader, model, optimizer, scheduler, args
             )
-            early_stopping_counter = 0
-        else:
-            early_stopping_counter += 1
-            if early_stopping_counter >= args.patience:
-                print(
-                    f"EarlyStopping counter: {early_stopping_counter} out of {args.patience}"
-                )
-                break
 
-        # scheduler
-        if args.scheduler == "plateau":
-            scheduler.step(best_auc)
+            ### VALID
+            auc, acc = validate(valid_loader, model, args)
+
+            ### TODO: model save or early stopping
+            if args.wandb :
+                wandb.log(
+                    {
+                        "epoch": epoch,
+                        "train_loss": train_loss,
+                        "train_auc": train_auc,
+                        "train_acc": train_acc,
+                        "valid_auc": auc,
+                        "valid_acc": acc,
+                    }
+                )
+            if auc > best_auc:
+                best_auc = auc
+                # torch.nn.DataParallel로 감싸진 경우 원래의 model을 가져옵니다.
+                model_to_save = model.module if hasattr(model, "module") else model
+                save_checkpoint(
+                    {
+                        "epoch": epoch + 1,
+                        "state_dict": model_to_save.state_dict(),
+                    },
+                    args.model_dir,
+                    "model.pt",
+                )
+                early_stopping_counter = 0
+            else:
+                early_stopping_counter += 1
+                if early_stopping_counter >= args.patience:
+                    print(
+                        f"EarlyStopping counter: {early_stopping_counter} out of {args.patience}"
+                    )
+                    break
+
+            # scheduler
+            if args.scheduler == "plateau":
+                scheduler.step(best_auc)
 
 
 def train(train_loader, model, optimizer, scheduler, args):
@@ -157,34 +175,51 @@ def validate(valid_loader, model, args):
 
 def inference(args, test_data):
 
-    model = load_model(args)
-    model.eval()
-    _, test_loader = get_loaders(args, None, test_data)
+    if args.model == "HistGradientBoosting":
+        model = load_model(args)
 
-    total_preds = []
+        # LEAVE LAST INTERACTION ONLY
+        test_data = test_data[test_data['userID'] != test_data['userID'].shift(-1)]
 
-    for step, batch in enumerate(test_loader):
-        input = process_batch(batch, args)
+        # DROP ANSWERCODE
+        test_data = test_data.drop(['answerCode'], axis=1)
 
-        preds = model(input)
+        # MAKE PREDICTION
+        total_preds = model.predict(test_data[FEATS])       
 
-        # predictions
-        preds = preds[:, -1]
 
-        if args.device == "cuda":
-            preds = preds.to("cpu").detach().numpy()
-        else:  # cpu
-            preds = preds.detach().numpy()
+    else:
+        model = load_model(args)
+        model.eval()
+        _, test_loader = get_loaders(args, None, test_data)
 
-        total_preds += list(preds)
+        total_preds = []
 
-    write_path = os.path.join(args.output_dir, "submission.csv")
+        for step, batch in enumerate(test_loader):
+            input = process_batch(batch, args)
+
+            preds = model(input)
+
+            # predictions
+            preds = preds[:, -1]
+
+            if args.device == "cuda":
+                preds = preds.to("cpu").detach().numpy()
+            else:  # cpu
+                preds = preds.detach().numpy()
+
+            total_preds += list(preds)
+    
+    output_dir = 'output/'
+    write_path = os.path.join(args.output_dir, f"submission_{args.model}.csv")
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
     with open(write_path, "w", encoding="utf8") as w:
         w.write("id,prediction\n")
         for id, p in enumerate(total_preds):
             w.write("{},{}\n".format(id, p))
+
+    print("Done!")
 
 
 def get_model(args):
@@ -193,12 +228,17 @@ def get_model(args):
     """
     if args.model == "lstm":
         model = LSTM(args)
+        model.to(args.device)
     if args.model == "lstmattn":
         model = LSTMATTN(args)
+        model.to(args.device)
     if args.model == "bert":
         model = Bert(args)
+        model.to(args.device)
+    if args.model == "HistGradientBoosting":
+        model = HistGradientBoostingRegressor()
 
-    model.to(args.device)
+   
 
     return model
 
@@ -244,7 +284,6 @@ def compute_loss(preds, targets):
     Args :
         preds   : (batch_size, max_seq_len)
         targets : (batch_size, max_seq_len)
-
     """
     loss = get_criterion(preds, targets)
 
@@ -271,14 +310,16 @@ def save_checkpoint(state, model_dir, model_filename):
 
 
 def load_model(args):
+    if args.model == "HistGradientBoosting":
+        model = joblib.load(os.path.join(args.output_dir, f"{args.model}.pkl"))
+    else:
+        model_path = os.path.join(args.model_dir, args.model_name)
+        print("Loading Model from:", model_path)
+        load_state = torch.load(model_path)
+        model = get_model(args)
 
-    model_path = os.path.join(args.model_dir, args.model_name)
-    print("Loading Model from:", model_path)
-    load_state = torch.load(model_path)
-    model = get_model(args)
+        # load model state
+        model.load_state_dict(load_state["state_dict"], strict=True)
 
-    # load model state
-    model.load_state_dict(load_state["state_dict"], strict=True)
-
-    print("Loading Model from:", model_path, "...Finished.")
+        print("Loading Model from:", model_path, "...Finished.")
     return model
