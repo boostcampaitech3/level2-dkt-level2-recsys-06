@@ -162,3 +162,5 @@ cython_debug/
 # project
 CatBoost/output/
 CatBoost/catboost_info
+output
+catboost_info
