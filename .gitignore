@@ -162,3 +162,5 @@ cython_debug/
 output/
 CatBoost
 catboost_info
+asset
+models
