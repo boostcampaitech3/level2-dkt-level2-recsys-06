@@ -23,7 +23,8 @@ def main(args):
 
     if args.wandb:
         wandb.login()
-        wandb.init(project="dkt", config=vars(args))
+        #wandb.init(project="dkt", config=vars(args))
+        wandb.init(group="GRU_optimizer", project="DKT", entity="recsys-06", name=f"GRU_{args.optimizer}")
     trainer.run(args, train_data, valid_data)
 
 
