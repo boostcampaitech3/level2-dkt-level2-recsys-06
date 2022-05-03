@@ -62,7 +62,8 @@ def run(args, train_data, valid_data):
                     "state_dict": model_to_save.state_dict(),
                 },
                 args.model_dir,
-                "model.pt",
+                #"model.pt",
+                args.model_name
             )
             early_stopping_counter = 0
         else:
