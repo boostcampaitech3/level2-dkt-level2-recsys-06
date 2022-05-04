@@ -19,7 +19,7 @@ def get_optimizer(model, args):
     if args.optimizer == "Adadelta":
         optimizer = Adadelta(model.parameters(), lr=args.lr, weight_decay=0.01)
     if args.optimizer == "SGD":
-        optimizer = SGD(model.parameters(), lr=args.lr, weight_decay=0.01)
+        optimizer = SGD(model.parameters(), lr=args.lr, weight_decay=0.01, momentum=0.9)
     if args.optimizer == "ASGD":
         optimizer = ASGD(model.parameters(), lr=args.lr, weight_decay=0.01)
     if args.optimizer == "Rprop":
