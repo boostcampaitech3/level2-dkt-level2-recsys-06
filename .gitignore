@@ -165,3 +165,4 @@ catboost_info
 models
 wandb
 asset
+*.out
