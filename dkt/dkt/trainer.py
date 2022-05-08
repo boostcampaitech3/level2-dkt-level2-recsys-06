@@ -234,7 +234,7 @@ def get_model(args):
         model = Bert(args)
         model.to(args.device)
     if args.model == "XGBoost":
-        model = XGBRegressor(learning_rate=0.1,max_depth=5,n_estimators=100)
+        XGBRegressor(learning_rate=0.01,max_depth=10,n_estimators=120)
 
    
 
