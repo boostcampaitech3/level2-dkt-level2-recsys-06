@@ -161,3 +161,7 @@ cython_debug/
 
 CatBoost
 output
+models
+wandb
+asset
+catboost_info
