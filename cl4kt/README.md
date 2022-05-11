@@ -17,4 +17,11 @@ Please use the following script to run the CL4KT model:
 CUDA_VISIBLE_DEVICES=0 python main.py --model_name cl4kt --data_name iscream --mask_prob 0.5 --crop_prob 0.3 --permute_prob 0.5 --replace_prob 0.5 --reg_cl 0.1
 ```
 
+
+'''
+1. data_preprocessing.ipynb 파일 먼저 실행
+
+2. 아래의 커맨드 입력. (세부 경로 설정은 본인이 조절해야 할 듯)
+저는 workspace에 cl4kt 폴더를 만들어서 돌렸습니다.
 CUDA_VISIBLE_DEVICES=0 python main.py
+'''
