@@ -16,3 +16,5 @@ Please use the following script to run the CL4KT model:
 ```
 CUDA_VISIBLE_DEVICES=0 python main.py --model_name cl4kt --data_name iscream --mask_prob 0.5 --crop_prob 0.3 --permute_prob 0.5 --replace_prob 0.5 --reg_cl 0.1
 ```
+
+CUDA_VISIBLE_DEVICES=0 python main.py

@@ -19,6 +19,8 @@ from sklearn.model_selection import KFold
 from datetime import datetime, timedelta
 from utils.config import ConfigNode as CN
 from utils.file_io import PathManager
+from utils.make_submission import make_submission
+import shutil
 
 
 def main(config):
@@ -179,7 +181,7 @@ def main(config):
 
         model, opt = accelerator.prepare(model, opt)
 
-        test_auc, test_acc, test_rmse = model_train(
+        test_auc, test_acc, test_rmse, submission_path = model_train(
             fold,
             model,
             accelerator,
@@ -204,17 +206,24 @@ def main(config):
 
     now = (datetime.now() + timedelta(hours=9)).strftime("%Y%m%d-%H%M%S")  # KST time
 
-    log_out_path = os.path.join(
-        os.path.join("logs", "5-fold-cv", "{}".format(data_name))
-    )
-    os.makedirs(log_out_path, exist_ok=True)
-    with open(os.path.join(log_out_path, "{}-{}".format(model_name, now)), "w") as f:
+    # log_out_path = os.path.join(
+    #     os.path.join("logs", "5-fold-cv", "{}".format(data_name))
+    # )
+    # os.makedirs(log_out_path, exist_ok=True)
+    # with open(os.path.join(log_out_path, "{}-{}".format(model_name, now)), "w") as f:
+    #     f.write("AUC\tACC\tRMSE\n")
+    #     f.write("{:.5f}\t{:.5f}\t{:.5f}".format(test_auc, test_acc, test_rmse))
+    
+    with open(os.path.join(submission_path, "{}-{}".format(model_name, now)), "w") as f:
         f.write("AUC\tACC\tRMSE\n")
         f.write("{:.5f}\t{:.5f}\t{:.5f}".format(test_auc, test_acc, test_rmse))
 
     print("\n5-fold CV Result")
     print("AUC\tACC\tRMSE")
     print("{:.5f}\t{:.5f}\t{:.5f}".format(test_auc, test_acc, test_rmse))
+
+    make_submission(submission_path)
+    shutil.copy('/workspace/cl4kt/configs/example.yaml', submission_path)
 
 
 if __name__ == "__main__":

@@ -181,8 +181,21 @@ def model_train(
     auc = roc_auc_score(y_true=total_trues, y_score=total_preds)
     acc = accuracy_score(y_true=total_trues >= 0.5, y_pred=total_preds >= 0.5)
     rmse = np.sqrt(mean_squared_error(y_true=total_trues, y_pred=total_preds))
-    total_ans = pd.DataFrame(total_ans, columns=["id", "prediction"])
-    total_ans.to_csv(os.path.join('./', 'submission_{}.csv'.format(fold)), sep='\t')
+
+    sub_num=1
+    submission_path = os.path.join("submission", model_name, data_name, str(sub_num))
+    while os.path.isdir(submission_path):
+        if os.path.isfile(os.path.join(submission_path, 'submission_4.csv')):
+            sub_num += 1
+            submission_path = os.path.join("submission", model_name, data_name, str(sub_num))
+        else:
+            break
+    if not os.path.isdir(submission_path):
+        os.makedirs(submission_path)
+
+    total_ans = pd.DataFrame(total_ans, columns=["prediction"])
+    total_ans.index.name='id'
+    total_ans.to_csv(os.path.join(submission_path, 'submission_{}.csv'.format(fold)), sep=',')
 
     print(
         "Best Model\tTEST AUC: {:.5f}\tTEST ACC: {:5f}\tTEST RMSE: {:5f}".format(
@@ -200,8 +213,11 @@ def model_train(
 
     log_out_path = os.path.join(log_path, data_name)
     os.makedirs(log_out_path, exist_ok=True)
+    # logs_df.to_csv(
+    #     os.path.join(log_out_path, "{}_{}.csv".format(model_name, now)), index=False
+    # )
     logs_df.to_csv(
-        os.path.join(log_out_path, "{}_{}.csv".format(model_name, now)), index=False
+        os.path.join(submission_path, "{}_{}.csv".format(model_name, now)), index=False
     )
 
-    return auc, acc, rmse
+    return auc, acc, rmse, submission_path
