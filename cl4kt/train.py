@@ -181,8 +181,8 @@ def model_train(
     auc = roc_auc_score(y_true=total_trues, y_score=total_preds)
     acc = accuracy_score(y_true=total_trues >= 0.5, y_pred=total_preds >= 0.5)
     rmse = np.sqrt(mean_squared_error(y_true=total_trues, y_pred=total_preds))
-    total_ans = pd.DataFrame(total_ans)
-    total_ans.to_csv(os.path.join('./', 'submission.csv'), sep='\t')
+    total_ans = pd.DataFrame(total_ans, columns=["id", "prediction"])
+    total_ans.to_csv(os.path.join('./', 'submission_{}.csv'.format(fold)), sep='\t')
 
     print(
         "Best Model\tTEST AUC: {:.5f}\tTEST ACC: {:5f}\tTEST RMSE: {:5f}".format(
