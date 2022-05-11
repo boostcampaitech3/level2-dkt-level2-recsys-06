@@ -21,6 +21,7 @@ from utils.config import ConfigNode as CN
 from utils.file_io import PathManager
 from utils.make_submission import make_submission
 import shutil
+import sys
 
 
 def main(config):
@@ -223,8 +224,11 @@ def main(config):
     print("{:.5f}\t{:.5f}\t{:.5f}".format(test_auc, test_acc, test_rmse))
 
     make_submission(submission_path)
-    shutil.copy('/workspace/cl4kt/configs/example.yaml', submission_path)
 
+    sys.stdout = open(os.path.join(submission_path, 'example.txt'), 'w')
+    print(config)
+    sys.stdout.close()
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

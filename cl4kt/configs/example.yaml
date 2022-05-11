@@ -3,7 +3,7 @@ dataset_path: "/opt/ml/input/data"
 checkpoint_dir: .ckpts
 seed: 12405
 
-akt_config:
+akt_config: # not used
   embedding_size: 64
   num_blocks: 2
   kq_same: True
@@ -22,14 +22,14 @@ cl4kt_config:
   kq_same: True
   final_fc_dim: 512
   d_ff: 1024
-  l2: 0.0
-  dropout: 0.2 # TODO
-  reg_cl: 0.1 # TODO 0.1
-  mask_prob: 0.2 # TODO 0.2
-  crop_prob: 0.3 # TODO 0.3 
-  permute_prob: 0.3 # TODO 0.5
-  replace_prob: 0.3 # TODO 0.5
-  negative_prob: 1.0 # TODO
+  l2: 0.0 # no effect
+  dropout: 0.2 # no effect
+  reg_cl: 0.1 # no effect
+  mask_prob: 0.5 # no effect
+  crop_prob: 0.5 # no effect
+  permute_prob: 0.5 # no effect
+  replace_prob: 0.5 # no effect
+  negative_prob: 1.0 # no effect
   temp: 0.05
   hard_negative_weight: 1.0
 
@@ -37,14 +37,14 @@ cl4kt_config:
 train_config:
   log_wandb_fold: True
   sequence_option: "recent" # early or recent
-  seq_len: 100 # TODO 100
-  batch_size: 64 # TODO 512 64
-  eval_batch_size: 64 # TODO 512 64
+  seq_len: 100 
+  batch_size: 64 # no effect
+  eval_batch_size: 64 
   num_epochs: 100
   print_epochs: 1
   max_grad_norm: 2.0
-  learning_rate: 0.001 # TODO
-  optimizer: adam # TODO
+  learning_rate: 0.001 # no effect
+  optimizer: adam # no effect
   
   loss: BCE
 
