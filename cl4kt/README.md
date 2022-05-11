@@ -21,7 +21,11 @@ CUDA_VISIBLE_DEVICES=0 python main.py --model_name cl4kt --data_name iscream --m
 '''
 1. data_preprocessing.ipynb 파일 먼저 실행
 
-2. 아래의 커맨드 입력. (세부 경로 설정은 본인이 조절해야 할 듯)
+2. configs/example.yaml 파일을 통해서 하이퍼 파라미터 튜닝 가능
+
+3. 아래의 커맨드 입력. (세부 경로 설정은 본인이 조절해야 할 듯)
 저는 workspace에 cl4kt 폴더를 만들어서 돌렸습니다.
 CUDA_VISIBLE_DEVICES=0 python main.py
+
+4. submission 폴더에 돌린 파일의 example.yaml, 성능, submission 파일 저장됨
 '''
