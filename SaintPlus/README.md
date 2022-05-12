@@ -9,10 +9,10 @@ The basic idea is that we fed current question and stream of past exerices into 
     
 How students performed in past is used as decoder input. The first layer of decoder will learn relationship between responses, how long they took for a question task and time gap between different task user answered. The output sequence from first decoder layer is forward to second layer as query. The intuitive explanation is right now we have past experince of knowledge (query), how will a student perform (weighted value vector) for a sequence of questions (key, value).     
 
-![image](https://github.com/boostcampaitech3/level2-dkt-level2-recsys-06/blob/main/elapsed.png)
+![image](https://github.com/boostcampaitech3/level2-dkt-level2-recsys-06/blob/main/SaintPlus/elapsed.png)
 
 ## Structure of model
-![image](https://github.com/boostcampaitech3/level2-dkt-level2-recsys-06/blob/main/structure.png)
+![image](https://github.com/boostcampaitech3/level2-dkt-level2-recsys-06/blob/main/SaintPlus/structure.png)
 
 ## How to train
 1. Run `python pre_process.py` to fit data for training but you have to concatenate train/validation dataframe from dataset
