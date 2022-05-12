@@ -166,3 +166,4 @@ catboost_info
 wandb
 models
 asset
+*.pt
