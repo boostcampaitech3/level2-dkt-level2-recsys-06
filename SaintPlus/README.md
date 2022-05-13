@@ -2,15 +2,16 @@
 paper : https://arxiv.org/abs/2002.07033
 
 ## Introduction
-Thanks to BoostCamp and a lot of amazing data enthusiasm people sharing their info so I had a chance to learn Transformer and really use it to a real-world task!   
-    
-Saint+ is a **Transformer** based knowledge-tracing model which takes students' exercise history information to predict future performance. As classical Transformer, it has an Encoder-Decoder structure that Encoder applied self-attention to a stream of exercise embeddings; Decoder applied self-attention to responses embeddings and encoder-decoder attention to encoder output.
+기본 아이디어는 현재 문제와 과거 문제를 인코더에 입력으로 주면 문제 푼 경험의 어떤 부분을 `Attention` 하는지 찾을 수 있다.
+다음으로 인코더 값 벡터의 가중치 합을 encoder-decoder의 attention layer에 key와 value 값으로 설정한다.
+
+학생들의 과거이력 칼럼이 디코더 입력으로 사용되고, 디코더의 첫 번째 layer는 응답 간의 관계, 질문 작업에 소요된 시간 및 사용자가 응답한 다른 문제간의 시간 간격을 학습한다. 
+첫 번째 디코더의 output sequence는 query로 다음 layer에 전달한다. 
+
+직관적인 설명은 `지식 경험(query)`에 대한 과거 경험을 가지고 있으며, `문제풀이(key, value)`에 대해 `학생들이 어떻게 수행할 것인지(weighted value vector)`로 표현할 수 있다.
 
 ## SaintPlus
-The basic idea is that we fed current question and stream of past exerices into encoder, it will find which parts of exercises experience should be noticed. Then fed the weighted sum of encoder value vector as key and value to encoder-decoder attention layer.    
-    
-How students performed in past is used as decoder input. The first layer of decoder will learn relationship between responses, how long they took for a question task and time gap between different task user answered. The output sequence from first decoder layer is forward to second layer as query. The intuitive explanation is right now we have past experince of knowledge (query), how will a student perform (weighted value vector) for a sequence of questions (key, value).     
-
+Saint+는 **Transformer**기반 지식 추적 모델로 학생들의 문제 이력 정보를 바탕으로 미래 정답을 예측.
 ![image](https://github.com/boostcampaitech3/level2-dkt-level2-recsys-06/blob/main/SaintPlus/elapsed.png)
 
 ## Structure of model
