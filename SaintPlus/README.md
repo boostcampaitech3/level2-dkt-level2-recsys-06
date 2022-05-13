@@ -1,4 +1,6 @@
 # SaintPlus-Knowledge-Tracing-Transformer
+paper : https://arxiv.org/abs/2002.07033
+
 ## Introduction
 Thanks to BoostCamp and a lot of amazing data enthusiasm people sharing their info so I had a chance to learn Transformer and really use it to a real-world task!   
     
@@ -14,6 +16,32 @@ How students performed in past is used as decoder input. The first layer of deco
 ## Structure of model
 ![image](https://github.com/boostcampaitech3/level2-dkt-level2-recsys-06/blob/main/SaintPlus/structure.png)
 
+## Parameters
+- `num_layers`: int.
+    number of multihead attention layer
+- `num_heads`: int.
+    number of head in one multihead attention layer
+- `d_model`: int.
+    dimension of embedding size
+- `n_questions`: int
+    number of different question
+- `seq_len`: int
+    sequence length
+- `warmup_steps`: int
+    warmup_steps for learning rate
+- `dropout`: float
+    dropout ratio
+- `epochs`: int
+    number of epochs
+- `patience`: int
+    patience to wait before early stopping
+- `batch_size`: int
+    batch size
+- `optimizer`: str
+    optimizer
+- `lr`: float
+    learning rate
+
 ## How to train
 1. Run `python pre_process.py` to fit data for training but you have to concatenate train/validation dataframe from dataset
 2. Adjust hyperparameter in `args.py`
@@ -26,7 +54,6 @@ How students performed in past is used as decoder input. The first layer of deco
 |---|---|---|---|
 |Basic Dataset|0.8398|0.8260|0.7500|
 |with Feature Engineering|0.8510|0.8114|0.7554|
-
 
 ## Reference
 https://arxiv.org/abs/2010.12042 - SAINT+: Integrating Temporal Features for EdNet Correctness Prediction   
