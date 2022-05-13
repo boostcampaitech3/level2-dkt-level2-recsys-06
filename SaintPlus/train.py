@@ -1,3 +1,6 @@
+#
+# refer to github : https://github.com/Chang-Chia-Chi/SaintPlus-Knowledge-Tracing-Pytorch
+#
 import time
 import pickle
 import torch
