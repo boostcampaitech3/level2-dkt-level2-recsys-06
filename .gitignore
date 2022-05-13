@@ -160,5 +160,10 @@ cython_debug/
 #.idea/
 
 dkt/
+*.pt
+models/
+catboost_info
+*.out
 output/
-wandb/
+wandb
+asset
